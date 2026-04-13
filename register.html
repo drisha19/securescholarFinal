@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Register</h2>
+
+<input type="text" id="user" placeholder="Create Username"><br>
+<input type="password" id="pass" placeholder="Create Password"><br>
+
+<button onclick="register()">Register</button>
+
+<script>
+function register(){
+    let u = document.getElementById("user").value;
+    let p = document.getElementById("pass").value;
+
+    localStorage.setItem("username", u);
+    localStorage.setItem("password", p);
+
+    alert("Registered Successfully!");
+    window.location = "login.html";
+}
+</script>
+
+</body>
+</html>

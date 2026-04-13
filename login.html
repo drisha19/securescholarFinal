@@ -1,0 +1,97 @@
+ <!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h2>Student Login</h2>
+
+<input type="text" id="user" placeholder="Username"><br>
+<input type="password" id="pass" placeholder="Password"><br>
+
+<button onclick="login()">Login</button>
+
+<p id="msg"></p>
+
+<input type="text" id="name" placeholder="Enter your name">
+<input type="email" id="email" placeholder="Enter your email">
+<input type="file" id="profilePic">
+<button onclick="registerUser()">Register / Login</button>
+
+<script>
+function login(){
+   let email = document.getElementById("user").value;
+let pass = document.getElementById("pass").value;
+
+let storedUser = localStorage.getItem("username");
+let storedPass = localStorage.getItem("password");
+
+if(u === storedUser && p === storedPass){
+    // ✅ Successful login
+
+    // Store current user info (email, fake IP, location)
+    let email = u; // your login email
+    let ip = "192.168.1." + Math.floor(Math.random() * 255);
+    let locations = ["Chennai, India", "Mumbai, India", "Delhi, India", "Bangalore, India"];
+    let location = locations[Math.floor(Math.random() * locations.length)];
+
+    localStorage.setItem("currentUser", JSON.stringify({ email, ip, location }));
+
+    window.location = "student.html";
+}
+}
+let user = {
+    name: "Ravi Kumar",
+    email: "ravi@gmail.com",
+    image: "https://i.pravatar.cc/150?img=3"
+};
+
+
+localStorage.setItem("currentUser", JSON.stringify(user));
+function registerUser(){
+
+    let name = document.getElementById("name").value;
+    let email = document.getElementById("email").value;
+    let file = document.getElementById("profilePic").files[0];
+
+    if(!name || !email){
+        alert("Enter all details");
+        return;
+    }
+
+    let reader = new FileReader();
+
+    reader.onload = function(e){
+
+        let user = {
+            name: name,
+            email: email,
+            image: e.target.result   // ✅ auto image stored
+        };
+
+        localStorage.setItem("currentUser", JSON.stringify(user));
+
+        // go to dashboard
+        window.location = "student.html";
+    };
+
+    if(file){
+        reader.readAsDataURL(file);  // convert image → base64
+    } else {
+        // if no image uploaded
+        let user = {
+            name: name,
+            email: email,
+            image: "https://i.pravatar.cc/150"
+        };
+
+        localStorage.setItem("currentUser", JSON.stringify(user));
+        window.location = "student.html";
+    }
+}
+</script>
+
+</body>
+</html> 

@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Dashboard</title>
+
+    <style>
+        body { margin:0; font-family: Arial; background:#0b1220; color:white; display:flex; }
+
+        .sidebar { width:230px; background:#111827; height:100vh; padding:20px; }
+        .sidebar h2 { color: cyan; }
+
+        .menu div { padding:12px; margin:10px 0; cursor:pointer; border-radius:5px; }
+        .menu div:hover { background: #1f2937; }
+        .active { background:#06b6d4; }
+
+        .main { flex:1; padding:30px; }
+
+        button {
+            padding:10px 15px;
+            background:#06b6d4;
+            border:none;
+            color:white;
+            border-radius:5px;
+            cursor:pointer;
+        }
+
+        .hidden { display:none; }
+
+        input {
+            padding:8px;
+            width:90%;
+            margin:5px 0;
+            border-radius:5px;
+            border:none;
+        }
+
+        /* DASHBOARD GRID */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .dash-card {
+            background: linear-gradient(135deg, #06b6d4, #3b82f6);
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 0 15px rgba(0,255,255,0.2);
+        }
+
+        /* PROFILE CARD */
+        .profile-card {
+            background: #111827;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .profile-card img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- Sidebar -->
+<div class="sidebar">
+    <h2>SecureScholar</h2>
+
+    <div class="menu">
+        <div onclick="show('dashboard', this)" class="active">Dashboard</div>
+        <div onclick="show('scholarship', this)">Scholarships</div>
+        <div onclick="show('payments', this)">Payments</div>
+        <div onclick="show('documents', this)">Documents</div>
+        <div onclick="show('notifications', this)">Notifications</div>
+    </div>
+
+    <br><br>
+    <a href="index.html" style="color:white;">Logout</a>
+</div>
+
+<!-- Main -->
+<div class="main">
+
+<!-- DASHBOARD -->
+<div id="dashboard">
+    <h2>Welcome 👋</h2>
+
+    <!-- ✅ PROFILE -->
+   <div class="profile-card">
+    <img id="profileImg" src="https://ui-avatars.com/api/?name=User&background=06b6d4&color=fff" alt="profile">
+    <h3 id="profileName">Student</h3>
+    <p id="profileEmail">email@gmail.com</p>
+</div>
+
+    <!-- ✅ CARDS -->
+    <div class="dashboard-grid">
+        <div class="dash-card">
+            <h3>🎓 Scholarship Status</h3>
+            <p>Pending</p>
+        </div>
+
+        <div class="dash-card">
+            <h3>💰 Fees Pending</h3>
+            <p>₹25,000</p>
+        </div>
+
+        <div class="dash-card">
+            <h3>📅 Recent Activity</h3>
+            <p>Logged in today</p>
+        </div>
+    </div>
+</div>
+
+<!-- SCHOLARSHIP -->
+<div id="scholarship" class="hidden">
+    <h2>Scholarship Application</h2>
+    <input type="text" placeholder="Enter Name"><br>
+    <input type="text" placeholder="Enter Course"><br>
+    <button onclick="applyScholarship()">Apply</button>
+    <p id="schStatus"></p>
+</div>
+
+<!-- PAYMENTS -->
+<div id="payments" class="hidden">
+    <h2>Fee Payment</h2>
+
+    <input type="number" id="payAmount" placeholder="Enter amount"><br>
+    <button onclick="payFees()">Pay Now</button>
+
+    <h4>Payment History</h4>
+    <ul id="history"></ul>
+</div>
+
+<!-- DOCUMENTS -->
+<div id="documents" class="hidden">
+    <h2>Upload Documents 📄</h2>
+
+    <input type="file" id="docUpload"><br><br>
+    <button onclick="uploadDoc()">Upload</button>
+
+    <div id="docList"></div>
+</div>
+
+<!-- NOTIFICATIONS -->
+<div id="notifications" class="hidden">
+    <h2>Notifications 🔔</h2>
+    <div id="noti">
+        <p>🟢 No notifications yet</p>
+    </div>
+</div>
+
+</div>
+
+<script>
+
+// SWITCH
+function show(section, element){
+    let sections = ["dashboard","scholarship","payments","documents","notifications"];
+    sections.forEach(s => document.getElementById(s).classList.add("hidden"));
+    document.getElementById(section).classList.remove("hidden");
+
+    document.querySelectorAll(".menu div").forEach(i=>i.classList.remove("active"));
+    element.classList.add("active");
+}
+
+// LOAD PROFILE (MAIN FIX)
+function loadProfile(){
+
+    let user = JSON.parse(localStorage.getItem("currentUser"));
+
+    if(user){
+
+        document.getElementById("profileName").innerText = user.name || "Student";
+        document.getElementById("profileEmail").innerText = user.email || "No Email";
+
+        // 🔥 AUTO GENERATE PROFILE IMAGE FROM NAME
+        let imgUrl = `https://ui-avatars.com/api/?name=${user.name}&background=06b6d4&color=fff`;
+
+        document.getElementById("profileImg").src = imgUrl;
+
+    }
+}
+
+// APPLY
+function applyScholarship(){
+    document.getElementById("schStatus").innerText = "Application Submitted ✔️";
+}
+
+// PAYMENT
+function payFees(){
+    let amount = parseInt(document.getElementById("payAmount").value);
+    if(!amount || amount <=0){
+        alert("Enter valid amount");
+        return;
+    }
+
+    let user = JSON.parse(localStorage.getItem("currentUser")) || {};
+
+    let payments = JSON.parse(localStorage.getItem("payments")) || [];
+
+    payments.push({
+        email: user.email,
+        amount: amount,
+        time: new Date().toLocaleString()
+    });
+
+    localStorage.setItem("payments", JSON.stringify(payments));
+
+    document.getElementById("history").innerHTML += `<li>₹${amount} Paid</li>`;
+
+    document.getElementById("payAmount").value = "";
+}
+
+// DOCUMENTS
+function uploadDoc(){
+    let file = document.getElementById("docUpload").files[0];
+
+    if(!file){
+        alert("Select file");
+        return;
+    }
+
+    let docs = JSON.parse(localStorage.getItem("documents")) || [];
+
+    docs.push({
+        name: file.name,
+        time: new Date().toLocaleString() // ✅ FIXED TIME
+    });
+
+    localStorage.setItem("documents", JSON.stringify(docs));
+
+    alert("📄 Document uploaded");
+
+    loadDocuments(); // refresh
+}
+
+function loadDocuments(){
+    let docs = JSON.parse(localStorage.getItem("documents")) || [];
+    let box = document.getElementById("docBox");
+
+    if(docs.length === 0){
+        box.innerHTML = "<p>📭 No documents uploaded</p>";
+        return;
+    }
+
+    box.innerHTML = "";
+
+    docs.forEach(doc => {
+        box.innerHTML += `
+            <p>📄 ${doc.name}</p>
+            <p>⏰ ${doc.time || "Time not available"}</p>
+            <hr>
+        `;
+    });
+}
+// LOAD
+window.onload = function(){
+    loadProfile();
+    loadDocuments();
+};
+</script>
+
+</body>
+</html>

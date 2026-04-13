@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SecureScholar</title>
+
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #particles-js {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            background: #0b1220;
+            z-index: -1;
+        }
+
+        .container {
+            width: 420px;
+            padding: 35px;
+            background: rgba(17, 24, 39, 0.95);
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0,255,255,0.2);
+            text-align: center;
+        }
+
+        h1 { font-size: 34px; }
+        p { color: #9ca3af; }
+
+        .tabs button {
+            padding: 12px;
+            margin: 5px;
+            border: none;
+            cursor: pointer;
+            background: #1f2937;
+            color: white;
+            border-radius: 5px;
+            width: 30%;
+        }
+
+        .active { background: #22c55e !important; }
+
+        input {
+            width: 90%;
+            padding: 12px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: none;
+            background: #1f2937;
+            color: white;
+        }
+
+        .btn {
+            width: 95%;
+            padding: 12px;
+            background: linear-gradient(90deg, #06b6d4, #22c55e);
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .admin-btn {
+            background: linear-gradient(90deg, red, orange);
+        }
+
+        .hidden { display: none; }
+    </style>
+</head>
+
+<body>
+
+<div id="particles-js"></div>
+
+<div class="container">
+
+    <h1>SecureScholar</h1>
+    <p>Information Security Risk Assessment System</p>
+
+    <div class="tabs">
+        <button onclick="showTab('login')" class="active">Sign In</button>
+        <button onclick="showTab('register')">Register</button>
+        <button onclick="showTab('admin')">Admin</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="login">
+        <input type="text" id="loginUser" placeholder="Email"><br>
+        <input type="password" id="loginPass" placeholder="Password"><br>
+        <button class="btn" onclick="login()">Sign In</button>
+    </div>
+
+    <!-- OTP -->
+    <div id="otpSection" style="display:none;">
+        <input type="text" id="otpInput" placeholder="Enter OTP"><br>
+        <button class="btn" onclick="verifyOTP()">Verify OTP</button>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="register" class="hidden">
+        <input type="text" id="regName" placeholder="Full Name"><br>
+        <input type="text" id="regEmail" placeholder="Email"><br>
+        <input type="password" id="regPass" placeholder="Password" onkeyup="checkStrength()"><br>
+        <p id="strengthMsg"></p>
+        <button class="btn" onclick="register()">Create Account</button>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="admin" class="hidden">
+        <input type="text" id="adminUser" placeholder="admin@securescholar.com"><br>
+        <input type="password" id="adminPass" placeholder="Password"><br>
+        <button class="btn admin-btn" onclick="adminLogin()">Admin Login</button>
+    </div>
+
+</div>
+
+<script>
+
+// TAB SWITCH
+function showTab(tab){
+    ["login","register","admin"].forEach(id=>{
+        document.getElementById(id).classList.add("hidden");
+    });
+    document.getElementById(tab).classList.remove("hidden");
+}
+
+// REGISTER
+function register(){
+    let name = document.getElementById("regName").value;
+    let email = document.getElementById("regEmail").value;
+    let pass = document.getElementById("regPass").value;
+
+    if(!name || !email || !pass){
+        alert("Fill all fields");
+        return;
+    }
+
+    localStorage.setItem("user", email);
+    localStorage.setItem("pass", pass);
+    localStorage.setItem("name", name);
+
+    alert("✅ Registered Successfully!");
+    showTab("login");
+}
+
+// LOGIN
+let generatedOTP;
+
+function login(){
+
+    let email = document.getElementById("loginUser").value;
+    let pass = document.getElementById("loginPass").value;
+
+    let storedUser = localStorage.getItem("user");
+    let storedPass = localStorage.getItem("pass");
+    let storedName = localStorage.getItem("name");
+
+    let attemptsKey = "attempts_" + email;
+    let attempts = parseInt(localStorage.getItem(attemptsKey)) || 0;
+
+    // 🚫 LOCK AFTER 3 ATTEMPTS
+    if(attempts >= 3){
+        alert("🚫 Account Locked!");
+
+        let logs = JSON.parse(localStorage.getItem("attackLogs")) || [];
+        logs.push({
+            email: email,
+            time: new Date().toLocaleString(),
+            type: "Account Locked"
+        });
+
+        localStorage.setItem("attackLogs", JSON.stringify(logs));
+        return;
+    }
+
+    // 🚨 HACKER
+    if(email === "hacker@gmail.com"){
+        let logs = JSON.parse(localStorage.getItem("attackLogs")) || [];
+        logs.push({
+            email: email,
+            time: new Date().toLocaleString(),
+            type: "Unauthorized Access"
+        });
+
+        localStorage.setItem("attackLogs", JSON.stringify(logs));
+        alert("⚠️ Hacker detected!");
+        return;
+    }
+
+    // ❌ WRONG LOGIN
+    if(email !== storedUser || pass !== storedPass){
+        attempts++;
+        localStorage.setItem("attempts", attempts);
+        alert(`❌ Invalid Login (${attempts}/3)`);
+        return;
+    }
+
+    // ✅ SUCCESS
+    localStorage.setItem("attempts", 0);
+
+    generatedOTP = Math.floor(1000 + Math.random() * 9000);
+    alert("Your OTP is: " + generatedOTP);
+
+    document.getElementById("otpSection").style.display = "block";
+
+    let currentUser = {
+        name: storedName,
+        email: email
+    };
+
+    localStorage.setItem("currentUser", JSON.stringify(currentUser));
+}
+
+// OTP VERIFY
+function verifyOTP(){
+    let userOTP = document.getElementById("otpInput").value;
+
+    if(userOTP == generatedOTP){
+        alert("✅ Login Successful with 2FA");
+        window.location = "student.html";
+    } else {
+        alert("❌ Wrong OTP");
+    }
+}
+
+// ADMIN
+function adminLogin(){
+    let u = document.getElementById("adminUser").value;
+    let p = document.getElementById("adminPass").value;
+
+    if(u === "admin@securescholar.com" && p === "Admin@123"){
+        window.location = "admin.html";
+    } else {
+        alert("Invalid Admin Login");
+    }
+}
+
+// PASSWORD STRENGTH
+function checkStrength(){
+    let pass = document.getElementById("regPass").value;
+    let msg = document.getElementById("strengthMsg");
+
+    let strongPattern = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[@$!%*?&]).{8,}$/;
+
+    if(pass.length < 5){
+        msg.innerHTML = "❌ Weak Password";
+        msg.style.color = "red";
+    }
+    else if(!strongPattern.test(pass)){
+        msg.innerHTML = "⚠️ Medium Password";
+        msg.style.color = "orange";
+    }
+    else{
+        msg.innerHTML = "✅ Strong Password";
+        msg.style.color = "#22c55e";
+    }
+}
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/particles.js"></script>
+
+<script>
+particlesJS("particles-js", {
+  particles: {
+    number: { value: 60 },
+    color: { value: "#00ffff" },
+    size: { value: 3 },
+    move: { speed: 2 }
+  }
+});
+</script>
+
+</body>
+</html>
